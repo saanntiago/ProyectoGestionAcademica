@@ -1,0 +1,23 @@
+# =========================================================================
+# requirements.txt
+# Dependencias del Proyecto Integrador de Gestión Académica.
+# Instalar con:  pip install -r requirements.txt
+# =========================================================================
+
+# Framework web
+flask>=3.0
+
+# Conector oficial de MySQL (datos transaccionales)
+mysql-connector-python>=8.3
+
+# Driver de MongoDB (datos no estructurados: logs y preferencias)
+pymongo>=4.6
+
+# Hash de contraseñas con bcrypt (incluye salt automático)
+bcrypt>=4.1
+
+# Lectura del archivo .env
+python-dotenv>=1.0
+
+# Opcional: solo si se usa Firebase en lugar de MongoDB (NOSQL_BACKEND=firebase)
+# firebase-admin>=6.5

@@ -1,0 +1,28 @@
+# =========================================================================
+# .gitignore
+# Archivos que NUNCA deben subirse al repositorio.
+# =========================================================================
+
+# Credenciales y llaves privadas (seguridad)
+.env
+firebase-key.json
+
+# Entorno virtual de Python
+.venv/
+venv/
+
+# Archivos generados por Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+.pytest_cache/
+
+# Editores y sistema operativo
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+
+# Archivos temporales / registros
+*.log
