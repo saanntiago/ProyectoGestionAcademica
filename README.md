@@ -243,7 +243,3 @@ Las capturas de estas pruebas están en [`docs/capturas`](docs/capturas) y descr
 | `pymongo` no reconoce el certificado | Reloj del sistema desfasado | Sincronizar la hora de Windows |
 
 ---
-
-## 13. Guion de la demostración
-
-El guion con los tiempos sugeridos para el video de 3 minutos está en [`docs/GUION_VIDEO.md`](docs/GUION_VIDEO.md).
