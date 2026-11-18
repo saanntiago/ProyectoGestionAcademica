@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block titulo %}Cursos{% endblock %}
+{% block seccion %}Cursos{% endblock %}
+
+{% block contenido %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+  <div>
+    <h1 class="titulo-seccion">Cursos</h1>
+    <p class="subtitulo">
+      Oferta académica por periodo. Los cupos se calculan con las matrículas activas.
+    </p>
+  </div>
+</div>
+
+{# ----------------------------- Nuevo curso ----------------------------- #}
+<div class="card mb-3">
+  <div class="card-body">
+    <h2 class="titulo-seccion mb-1">Abrir un curso</h2>
+    <p class="subtitulo mb-3">
+      Se registra en CURSO y, si se elige un docente, también en PROFESOR_CURSO
+      (relación N:M) dentro de una misma transacción.
+    </p>
+
+    <form method="post" class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label" for="NombreCurso">Nombre del curso *</label>
+        <input class="form-control" id="NombreCurso" name="NombreCurso"
+               maxlength="100" required placeholder="Bases de Datos - Grupo B">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label" for="PeriodoAcademico">Periodo *</label>
+        <input class="form-control" id="PeriodoAcademico" name="PeriodoAcademico"
+               maxlength="10" required placeholder="2026-2" value="2026-2">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label" for="Cupos">Cupos *</label>
+        <input class="form-control" id="Cupos" name="Cupos" type="number"
+               min="1" max="200" required value="30">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label" for="Aula">Aula *</label>
+        <input class="form-control" id="Aula" name="Aula" maxlength="30"
+               required placeholder="A404">
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label" for="IdMateria">Materia *</label>
+        <select class="form-select" id="IdMateria" name="IdMateria" required>
+          <option value="">Selecciona una materia</option>
+          {% for carrera, materias_carrera in materias|groupby("NombreCarrera") %}
+            <optgroup label="{{ carrera }}">
+              {% for m in materias_carrera %}
+                <option value="{{ m.IdMateria }}">
+                  {{ m.NombreMateria }} · semestre {{ m.Semestre }} · {{ m.Creditos }} crédito{{ '' if m.Creditos == 1 else 's' }}
+                </option>
+              {% endfor %}
+            </optgroup>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="IdProfesor">Docente</label>
+        <select class="form-select" id="IdProfesor" name="IdProfesor">
+          <option value="">Sin asignar</option>
+          {% for p in profesores %}
+            <option value="{{ p.IdProfesor }}">
+              {{ p.PrimerNombre }} {{ p.PrimerApellido }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label" for="Horario">Horario *</label>
+        <input class="form-control" id="Horario" name="Horario" maxlength="100"
+               required placeholder="MIE 7AM A 9AM">
+      </div>
+      <div class="col-12">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-plus-lg me-1"></i> Crear curso
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ------------------------------- Listado ------------------------------- #}
+<div class="card">
+  <div class="card-body">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+      <div>
+        <h2 class="titulo-seccion">Cursos abiertos</h2>
+        <p class="subtitulo">{{ cursos|length }} curso{{ '' if cursos|length == 1 else 's' }} en total.</p>
+      </div>
+      <span class="chip-filtro">
+        <i class="bi bi-people"></i> Inscritos = matrículas activas
+      </span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th>Curso</th>
+            <th>Materia</th>
+            <th>Programa</th>
+            <th>Docente</th>
+            <th>Aula / Horario</th>
+            <th style="min-width:150px">Cupos</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in cursos %}
+            <tr>
+              <td>
+                <div class="celda-principal">{{ c.NombreCurso }}</div>
+                <div class="celda-secundaria">#{{ c.IdCurso }} · {{ c.PeriodoAcademico }}</div>
+              </td>
+              <td>
+                <div class="celda-principal" style="font-size:.85rem">{{ c.NombreMateria }}</div>
+                <div class="celda-secundaria">{{ c.Creditos }} crédito{{ '' if c.Creditos == 1 else 's' }}</div>
+              </td>
+              <td class="celda-secundaria">{{ c.NombreCarrera }}</td>
+              <td class="celda-secundaria">{{ c.Profesores or 'Sin asignar' }}</td>
+              <td>
+                <div class="celda-principal" style="font-size:.82rem">{{ c.Aula }}</div>
+                <div class="celda-secundaria">{{ c.Horario }}</div>
+              </td>
+              <td>
+                <div class="d-flex justify-content-between celda-secundaria mb-1">
+                  <span>{{ c.Inscritos }} / {{ c.Cupos }}</span>
+                  <span class="fw-semibold {{ 'text-success' if c.Disponibles else 'text-danger' }}">
+                    {{ c.Disponibles }} libre{{ '' if c.Disponibles == 1 else 's' }}
+                  </span>
+                </div>
+                <div class="barra {{ 'roja' if c.Ocupacion >= 90 else ('ambar' if c.Ocupacion >= 60 else '') }}">
+                  <span style="width: {{ [c.Ocupacion, 100]|min }}%"></span>
+                </div>
+              </td>
+            </tr>
+          {% else %}
+            <tr><td colspan="6" class="vacio">
+              <i class="bi bi-easel2"></i>No hay cursos registrados.
+            </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

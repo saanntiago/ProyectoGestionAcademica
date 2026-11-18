@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block titulo %}Matrículas{% endblock %}
+{% block seccion %}Matrículas{% endblock %}
+
+{% block contenido %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+  <div>
+    <h1 class="titulo-seccion">Matrículas</h1>
+    <p class="subtitulo">
+      {{ paginacion.total }} matrícula{{ '' if paginacion.total == 1 else 's' }} registrada{{ '' if paginacion.total == 1 else 's' }}
+      · relación N:M entre estudiantes y cursos.
+    </p>
+  </div>
+  <a class="btn btn-outline-secondary" href="#form-matricula">
+    <i class="bi bi-plus-lg me-1"></i> Ir al formulario
+  </a>
+</div>
+
+{# ------------------------- Registrar nueva matrícula ------------------------- #}
+<div class="card mb-3" id="form-matricula">
+  <div class="card-body">
+    <h2 class="titulo-seccion mb-1">Nueva matrícula</h2>
+    <p class="subtitulo mb-3">
+      Al guardar se crean la cabecera en MATRICULA y el detalle en
+      DETALLE_MATRICULA dentro de una sola transacción.
+    </p>
+
+    <form method="post" action="{{ url_for('crear_matricula') }}" class="row g-3">
+      <div class="col-lg-4">
+        <label class="form-label" for="IdEstudiante">Estudiante *</label>
+        <select class="form-select" id="IdEstudiante" name="IdEstudiante" required>
+          <option value="">Selecciona un estudiante</option>
+          {% for e in estudiantes %}
+            <option value="{{ e.IdEstudiante }}">
+              {{ e.PrimerNombre }} {{ e.PrimerApellido }} · {{ e.CorreoElectronico }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-lg-4">
+        <label class="form-label" for="IdCurso">Curso *</label>
+        <select class="form-select" id="IdCurso" name="IdCurso" required>
+          <option value="">Selecciona un curso</option>
+          {% for carrera, cursos_carrera in cursos|groupby("NombreCarrera") %}
+            <optgroup label="{{ carrera }}">
+              {% for c in cursos_carrera %}
+                {% set disponibles = c.Cupos - c.Inscritos %}
+                <option value="{{ c.IdCurso }}" data-creditos="{{ c.Creditos }}"
+                        {{ 'disabled' if disponibles <= 0 }}>
+                  {{ c.NombreCurso }} · {{ disponibles }} cupo{{ '' if disponibles == 1 else 's' }}
+                </option>
+              {% endfor %}
+            </optgroup>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-sm-4 col-lg-2">
+        <label class="form-label" for="Fecha">Fecha *</label>
+        <input class="form-control" id="Fecha" name="Fecha" type="date"
+               required value="{{ hoy|iso }}">
+      </div>
+
+      <div class="col-sm-4 col-lg-2">
+        <label class="form-label" for="Valor">Valor</label>
+        <input class="form-control" id="Valor" name="Valor" type="number"
+               min="0" step="1000" placeholder="Automático"
+               data-valor-credito="{{ valor_credito }}">
+        <div class="form-text">Sugerido: {{ valor_credito|moneda }} por crédito.</div>
+      </div>
+
+      <div class="col-sm-4 col-lg-2">
+        <label class="form-label" for="Estado">Estado *</label>
+        <select class="form-select" id="Estado" name="Estado" required>
+          <option value="ACTIVA" selected>ACTIVA</option>
+          <option value="PENDIENTE">PENDIENTE</option>
+        </select>
+      </div>
+
+      <div class="col-sm-4 col-lg-3 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="bi bi-journal-plus me-1"></i> Registrar matrícula
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# --------------------------------- Filtros --------------------------------- #}
+<div class="card mb-3">
+  <div class="card-body py-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <form class="d-flex flex-wrap gap-2" method="get">
+        <div class="input-group" style="max-width:330px">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input class="form-control" name="q" value="{{ busqueda }}" maxlength="100"
+                 placeholder="Buscar por estudiante o correo">
+        </div>
+        <select class="form-select" name="estado" style="max-width:170px">
+          <option value="">Todos los estados</option>
+          {% for e in estados %}
+            <option value="{{ e }}" {{ 'selected' if estado == e }}>{{ e }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-outline-secondary">Filtrar</button>
+        {% if busqueda or estado %}
+          <a class="btn btn-link text-decoration-none" href="{{ url_for('matriculas') }}">
+            Limpiar
+          </a>
+        {% endif %}
+      </form>
+      <span class="celda-secundaria">
+        <i class="bi bi-info-circle me-1"></i>
+        Un estudiante no puede tener dos matrículas activas en el mismo curso.
+      </span>
+    </div>
+  </div>
+</div>
+
+{# ------------------------------ Listado ------------------------------ #}
+{% for m in matriculas %}
+  <div class="card matricula-card mb-3">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <div class="d-flex align-items-center gap-3">
+        <div>
+          <div class="matricula-id">Matrícula #{{ m.IdMatricula }}</div>
+          <div class="celda-secundaria">
+            <i class="bi bi-calendar3 me-1"></i>{{ m.Fecha|fecha }}
+            · <i class="bi bi-person me-1"></i>{{ m.Estudiante }}
+            · {{ m.CorreoElectronico }}
+          </div>
+        </div>
+        <span class="badge text-bg-{{ {'ACTIVA':'success','FINALIZADA':'primary','CANCELADA':'danger','PENDIENTE':'warning'}.get(m.Estado, 'secondary') }}">
+          {{ m.Estado }}
+        </span>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <span class="fw-bold">{{ m.Valor|moneda }}</span>
+        <form method="post" action="{{ url_for('eliminar_matricula', matricula_id=m.IdMatricula) }}"
+              onsubmit="return confirm('¿Eliminar la matrícula #{{ m.IdMatricula }}? También se borrará su detalle.');">
+          <button class="btn btn-sm btn-outline-danger" title="Eliminar matrícula">
+            <i class="bi bi-trash3"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Curso</th>
+              <th>Materia</th>
+              <th class="text-center">Créditos</th>
+              <th>Periodo</th>
+              <th class="text-center">Nota final</th>
+              <th class="text-center">Estado</th>
+              <th class="text-end">Registrar nota</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in m.Detalles %}
+              <tr>
+                <td class="celda-principal" style="font-size:.84rem">{{ d.NombreCurso }}</td>
+                <td class="celda-secundaria">{{ d.NombreMateria }}</td>
+                <td class="text-center">{{ d.Creditos }}</td>
+                <td class="celda-secundaria">{{ d.PeriodoAcademico }}</td>
+                <td class="text-center">
+                  {% if d.NotaFinal is not none %}
+                    <span class="fw-bold">{{ '%.2f'|format(d.NotaFinal) }}</span>
+                  {% else %}
+                    <span class="celda-secundaria">—</span>
+                  {% endif %}
+                </td>
+                <td class="text-center">
+                  {% if d.EstadoDetalle %}
+                    <span class="badge text-bg-{{ {'APROBADO':'success','REPROBADO':'danger','PENDIENTE':'warning'}.get(d.EstadoDetalle, 'secondary') }}">
+                      {{ d.EstadoDetalle }}
+                    </span>
+                  {% elif d.NotaFinal is not none %}
+                    {% set estado_calculado = 'APROBADO' if d.NotaFinal >= 3 else 'REPROBADO' %}
+                    <span class="badge text-bg-{{ 'success' if estado_calculado == 'APROBADO' else 'danger' }}">
+                      {{ estado_calculado }}
+                    </span>
+                  {% else %}
+                    <span class="badge text-bg-warning">PENDIENTE</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <form class="nota-form" method="post"
+                        action="{{ url_for('actualizar_nota', matricula_id=m.IdMatricula) }}">
+                    <input type="hidden" name="IdCurso" value="{{ d.IdCurso }}">
+                    <input class="form-control form-control-sm" name="Nota" type="number"
+                           min="0" max="5" step="0.01" required
+                           value="{{ '%.2f'|format(d.NotaFinal) if d.NotaFinal is not none else '' }}"
+                           aria-label="Nota">
+                    <button class="btn btn-sm btn-outline-primary" title="Guardar nota">
+                      <i class="bi bi-check2"></i>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="7" class="vacio py-3">
+                  <i class="bi bi-exclamation-circle"></i>
+                  Esta matrícula no tiene cursos asociados en DETALLE_MATRICULA
+                  (registro creado fuera de la aplicación).
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% else %}
+  <div class="card">
+    <div class="card-body vacio">
+      <i class="bi bi-journal-x"></i>
+      {% if busqueda or estado %}
+        No hay matrículas que coincidan con los filtros aplicados.
+      {% else %}
+        Aún no hay matrículas registradas. Usa el formulario de arriba.
+      {% endif %}
+    </div>
+  </div>
+{% endfor %}
+
+{% include "_paginacion.html" %}
+{% endblock %}

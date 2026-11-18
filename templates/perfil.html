@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block titulo %}Mi cuenta{% endblock %}
+{% block seccion %}Mi cuenta{% endblock %}
+
+{% block contenido %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+  <div>
+    <h1 class="titulo-seccion">Mi cuenta</h1>
+    <p class="subtitulo">Datos del usuario y evidencia del cifrado de la contraseña.</p>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <span class="avatar grande">{{ usuario.NombreCompleto[0]|upper }}</span>
+          <div>
+            <h2 class="titulo-seccion">{{ usuario.NombreCompleto }}</h2>
+            <div class="celda-secundaria">@{{ usuario.Username }}</div>
+            <span class="badge text-bg-primary rol mt-1">{{ usuario.Rol }}</span>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between border-top pt-3 mb-2">
+          <span class="celda-secundaria">ID de usuario</span>
+          <span class="fw-semibold">#{{ usuario.IdUsuario }}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="celda-secundaria">Usuario</span>
+          <span class="fw-semibold">{{ usuario.Username }}</span>
+        </div>
+        <div class="d-flex justify-content-between">
+          <span class="celda-secundaria">Cuenta creada</span>
+          <span class="fw-semibold">{{ usuario.CreadoEn|fecha_hora }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h2 class="titulo-seccion mb-1">Contraseña almacenada</h2>
+        <p class="subtitulo mb-2">
+          Este es el valor real que está en la columna
+          <code>USUARIO.PasswordHash</code> de MySQL:
+        </p>
+        <div class="json-doc texto-codigo">{{ usuario.PasswordHash }}</div>
+        <p class="celda-secundaria mt-3 mb-0">
+          <i class="bi bi-shield-lock me-1"></i>
+          El prefijo <code>$2b$12$</code> indica un hash <strong>bcrypt</strong>
+          con 12 iteraciones. Es irreversible: no se puede recuperar la
+          contraseña original, solo verificar si coincide con
+          <code>bcrypt.checkpw()</code>.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h2 class="titulo-seccion">Actividad reciente</h2>
+            <p class="subtitulo">Últimos eventos de este usuario en MongoDB.</p>
+          </div>
+          <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('ver_logs') }}">
+            Ver todo
+          </a>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-sm align-middle">
+            <thead>
+              <tr><th>Fecha (UTC)</th><th>Acción</th><th>Detalle</th></tr>
+            </thead>
+            <tbody>
+              {% for log in accesos %}
+                <tr>
+                  <td class="celda-secundaria text-nowrap">{{ log.fecha|fecha_hora }}</td>
+                  <td>
+                    <span class="badge text-bg-{{ tonos.get(log.accion, 'secondary') }}">
+                      {{ acciones_log.get(log.accion, log.accion) }}
+                    </span>
+                  </td>
+                  <td class="celda-secundaria">{{ log.detalle }}</td>
+                </tr>
+              {% else %}
+                <tr><td colspan="3" class="vacio">
+                  <i class="bi bi-activity"></i>Sin actividad registrada.
+                </td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

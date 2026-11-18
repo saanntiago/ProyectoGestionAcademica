@@ -1,0 +1,20 @@
+{# Mensajes flash enviados desde las rutas (éxito, error, advertencia). #}
+{% with mensajes = get_flashed_messages(with_categories=true) %}
+  {% if mensajes %}
+    <div class="mb-3">
+      {% for categoria, mensaje in mensajes %}
+        {% set icono = 'check-circle-fill' if categoria == 'success'
+           else 'exclamation-octagon-fill' if categoria == 'danger'
+           else 'exclamation-triangle-fill' if categoria == 'warning'
+           else 'info-circle-fill' %}
+        <div class="alert alert-{{ categoria }} alert-dismissible fade show d-flex align-items-start gap-2"
+             role="alert">
+          <i class="bi bi-{{ icono }} mt-1"></i>
+          <div class="flex-grow-1">{{ mensaje }}</div>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"
+                  aria-label="Cerrar"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}

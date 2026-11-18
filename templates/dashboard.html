@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block titulo %}Panel de control{% endblock %}
+{% block seccion %}Panel de control{% endblock %}
+
+{% block contenido %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+  <div>
+    <h1 class="titulo-seccion">Hola, {{ session.nombre }}</h1>
+    <p class="subtitulo">Resumen general del sistema académico.</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('matriculas') }}">
+    <i class="bi bi-plus-lg me-1"></i> Nueva matrícula
+  </a>
+</div>
+
+{# ------------------------- Indicadores principales ------------------------- #}
+<div class="row g-3 mb-3">
+  <div class="col-sm-6 col-xl-3">
+    <div class="card h-100">
+      <div class="card-body kpi">
+        <div class="kpi-icono bg-primary-subtle text-primary">
+          <i class="bi bi-people-fill"></i>
+        </div>
+        <div>
+          <div class="kpi-etiqueta">Estudiantes</div>
+          <div class="kpi-valor">{{ totales.estudiantes }}</div>
+          <a class="celda-secundaria text-decoration-none"
+             href="{{ url_for('listar_estudiantes') }}">Ver listado →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card h-100">
+      <div class="card-body kpi">
+        <div class="kpi-icono bg-success-subtle text-success">
+          <i class="bi bi-journal-check"></i>
+        </div>
+        <div>
+          <div class="kpi-etiqueta">Matrículas activas</div>
+          <div class="kpi-valor">{{ totales.matriculas_activas }}</div>
+          <a class="celda-secundaria text-decoration-none"
+             href="{{ url_for('matriculas', estado='ACTIVA') }}">Ver matrículas →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card h-100">
+      <div class="card-body kpi">
+        <div class="kpi-icono bg-info-subtle text-info">
+          <i class="bi bi-easel2-fill"></i>
+        </div>
+        <div>
+          <div class="kpi-etiqueta">Cursos ofertados</div>
+          <div class="kpi-valor">{{ totales.cursos }}</div>
+          <a class="celda-secundaria text-decoration-none"
+             href="{{ url_for('cursos') }}">Ver cursos →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card h-100">
+      <div class="card-body kpi">
+        <div class="kpi-icono bg-warning-subtle text-warning-emphasis">
+          <i class="bi bi-cash-stack"></i>
+        </div>
+        <div>
+          <div class="kpi-etiqueta">Recaudo activo</div>
+          <div class="kpi-valor" style="font-size:1.35rem">{{ totales.recaudo|moneda }}</div>
+          <span class="celda-secundaria">Solo matrículas ACTIVAS</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  {# ---------------------- Estudiantes por carrera ---------------------- #}
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h2 class="titulo-seccion">Estudiantes por carrera</h2>
+            <p class="subtitulo">Distribución de los estudiantes registrados.</p>
+          </div>
+          <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('carreras') }}">
+            Gestionar
+          </a>
+        </div>
+
+        {% for carrera in carreras %}
+          <div class="mb-3">
+            <div class="d-flex justify-content-between mb-1">
+              <span class="fw-semibold" style="font-size:.86rem">{{ carrera.NombreCarrera }}</span>
+              <span class="celda-secundaria">{{ carrera.Total }} estudiante{{ '' if carrera.Total == 1 else 's' }}</span>
+            </div>
+            <div class="barra"><span style="width: {{ carrera.Porcentaje }}%"></span></div>
+          </div>
+        {% else %}
+          <div class="vacio"><i class="bi bi-bar-chart"></i>Sin carreras registradas.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  {# ------------------------- Estado de matrículas ------------------------- #}
+  <div class="col-lg-5">
+    <div class="card h-100">
+      <div class="card-body">
+        <h2 class="titulo-seccion mb-1">Estado de matrículas</h2>
+        <p class="subtitulo mb-3">Total histórico registrado en MySQL.</p>
+
+        <div class="lista-estados">
+          {% for fila in estados %}
+            {% set tono = {'ACTIVA': '', 'FINALIZADA': 'verde',
+                           'CANCELADA': 'roja', 'PENDIENTE': 'ambar'}.get(fila.Estado, '') %}
+            <div class="fila-estado">
+              <span class="nombre">
+                <span class="badge text-bg-{{ {'ACTIVA':'success','FINALIZADA':'primary','CANCELADA':'danger','PENDIENTE':'warning'}.get(fila.Estado, 'secondary') }}">
+                  {{ fila.Estado }}
+                </span>
+              </span>
+              <span class="cifra">{{ fila.Total }} · {{ fila.Recaudo|moneda }}</span>
+              <div class="barra {{ tono }}"><span style="width: {{ fila.Porcentaje }}%"></span></div>
+            </div>
+          {% else %}
+            <div class="vacio"><i class="bi bi-journal"></i>Aún no hay matrículas.</div>
+          {% endfor %}
+        </div>
+
+        <hr class="my-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <div class="kpi-etiqueta">Promedio general</div>
+            <div class="kpi-valor" style="font-size:1.5rem">
+              {{ promedio.Promedio if promedio.Promedio is not none else '—' }}
+              <span class="celda-secundaria">/ 5.0</span>
+            </div>
+          </div>
+          <span class="celda-secundaria">
+            {{ promedio.Calificadas }} nota{{ '' if promedio.Calificadas == 1 else 's' }} registrada{{ '' if promedio.Calificadas == 1 else 's' }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  {# ----------------------------- Últimos logs ----------------------------- #}
+  <div class="col-lg-8">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div>
+            <h2 class="titulo-seccion">Últimos eventos</h2>
+            <p class="subtitulo">Guardados como documentos en MongoDB Atlas.</p>
+          </div>
+          <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('ver_logs') }}">
+            Ver todos
+          </a>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-sm align-middle">
+            <thead>
+              <tr><th>Fecha (UTC)</th><th>Usuario</th><th>Acción</th><th>Detalle</th></tr>
+            </thead>
+            <tbody>
+              {% for log in ultimos_logs %}
+                <tr>
+                  <td class="celda-secundaria text-nowrap">{{ log.fecha|fecha_hora }}</td>
+                  <td class="fw-semibold">{{ log.usuario }}</td>
+                  <td>
+                    <span class="badge text-bg-{{ tonos.get(log.accion, 'secondary') }}">
+                      {{ acciones_log.get(log.accion, log.accion) }}
+                    </span>
+                  </td>
+                  <td class="celda-secundaria">{{ log.detalle }}</td>
+                </tr>
+              {% else %}
+                <tr><td colspan="4" class="vacio">
+                  <i class="bi bi-activity"></i>Sin eventos registrados todavía.
+                </td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# --------------------------- Acciones rápidas --------------------------- #}
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <h2 class="titulo-seccion mb-3">Acciones rápidas</h2>
+        <div class="d-grid gap-2">
+          <a class="btn btn-outline-primary text-start" href="{{ url_for('crear_estudiante') }}">
+            <i class="bi bi-person-plus me-2"></i>Registrar estudiante
+          </a>
+          <a class="btn btn-outline-primary text-start" href="{{ url_for('matriculas') }}">
+            <i class="bi bi-journal-plus me-2"></i>Matricular estudiante
+          </a>
+          <a class="btn btn-outline-primary text-start" href="{{ url_for('cursos') }}">
+            <i class="bi bi-easel2 me-2"></i>Abrir un curso
+          </a>
+          <a class="btn btn-outline-secondary text-start" href="{{ url_for('preferencias') }}">
+            <i class="bi bi-sliders2 me-2"></i>Cambiar preferencias
+          </a>
+        </div>
+
+        <hr class="my-3">
+        <p class="subtitulo mb-1"><i class="bi bi-info-circle me-1"></i>Arquitectura</p>
+        <p class="celda-secundaria mb-0">
+          MySQL guarda los datos transaccionales y MongoDB los documentos
+          flexibles. Cada operación queda auditada en la colección de logs.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

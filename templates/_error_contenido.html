@@ -1,0 +1,20 @@
+{# Contenido compartido por las páginas de error (con o sin sesión). #}
+<div class="error-shell">
+  <div class="card w-100" style="max-width: 580px">
+    <div class="card-body p-4 p-md-5 text-center">
+      <div class="error-codigo">{{ codigo }}</div>
+      <h1 class="h4 fw-bold mt-2 mb-2">{{ titulo }}</h1>
+      <p class="subtitulo mb-4">{{ mensaje }}</p>
+
+      {% if sugerencia %}
+        <div class="alert alert-light border text-start small">
+          <i class="bi bi-lightbulb me-1"></i>{{ sugerencia }}
+        </div>
+      {% endif %}
+
+      <a class="btn btn-primary" href="{{ url_for('dashboard') }}">
+        <i class="bi bi-arrow-left me-1"></i> Volver al panel
+      </a>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block titulo %}Registro de actividad{% endblock %}
+{% block seccion %}Registro de actividad{% endblock %}
+
+{% block contenido %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+  <div>
+    <h1 class="titulo-seccion">Registro de actividad</h1>
+    <p class="subtitulo">
+      {{ total_eventos }} evento{{ '' if total_eventos == 1 else 's' }} almacenado{{ '' if total_eventos == 1 else 's' }}
+      en la colección <code>logs</code> (hora UTC).
+    </p>
+  </div>
+  <form method="get" class="d-flex align-items-center gap-2">
+    {% if accion %}<input type="hidden" name="accion" value="{{ accion }}">{% endif %}
+    <label class="form-label mb-0 text-nowrap" for="limite">Mostrar</label>
+    <select class="form-select form-select-sm" id="limite" name="limite"
+            onchange="this.form.submit()">
+      {% for opcion in [10, 25, 50, 100, 200] %}
+        <option value="{{ opcion }}" {{ 'selected' if limite == opcion }}>{{ opcion }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+{# --------------------------- Filtros por acción --------------------------- #}
+<div class="filtros mb-3">
+  <a class="chip-filtro {{ 'activo' if not accion }}"
+     href="{{ url_for('ver_logs', limite=limite) }}">
+    Todas
+    <span class="badge text-bg-light text-body">{{ total_eventos }}</span>
+  </a>
+  {% for fila in conteos %}
+    {% if fila.accion in acciones_log %}
+      <a class="chip-filtro {{ 'activo' if accion == fila.accion }}"
+         href="{{ url_for('ver_logs', accion=fila.accion, limite=limite) }}">
+        {{ acciones_log[fila.accion] }}
+        <span class="badge text-bg-light text-body">{{ fila.total }}</span>
+      </a>
+    {% endif %}
+  {% endfor %}
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Fecha (UTC)</th>
+            <th>Usuario</th>
+            <th>Acción</th>
+            <th>Detalle</th>
+            <th>IP</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+            <tr>
+              <td class="celda-secundaria text-nowrap">{{ log.fecha|fecha_hora }}</td>
+              <td class="fw-semibold">{{ log.usuario }}</td>
+              <td>
+                <span class="badge text-bg-{{ tonos.get(log.accion, 'secondary') }}">
+                  {{ acciones_log.get(log.accion, log.accion) }}
+                </span>
+              </td>
+              <td class="celda-secundaria">{{ log.detalle }}</td>
+              <td class="celda-secundaria texto-codigo">{{ log.ip }}</td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="5" class="vacio">
+                <i class="bi bi-activity"></i>
+                {% if accion %}
+                  No hay eventos de ese tipo todavía.
+                {% else %}
+                  Aún no hay eventos registrados en MongoDB.
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<p class="celda-secundaria mt-3 mb-0">
+  <i class="bi bi-database me-1"></i>
+  Cada inicio de sesión, creación, edición o eliminación genera un documento
+  con usuario, acción, detalle, IP y fecha. La aplicación sigue funcionando
+  aunque MongoDB no esté disponible (solo se muestra una advertencia).
+</p>
+{% endblock %}

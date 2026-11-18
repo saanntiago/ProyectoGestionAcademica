@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block titulo %}Carreras{% endblock %}
+{% block seccion %}Carreras{% endblock %}
+
+{% block contenido %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+  <div>
+    <h1 class="titulo-seccion">Carreras</h1>
+    <p class="subtitulo">Programas académicos registrados en MySQL.</p>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-body">
+        <h2 class="titulo-seccion mb-3">Listado</h2>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Carrera</th>
+                <th class="text-center">Estudiantes</th>
+                <th class="text-center">ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in carreras %}
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="kpi-icono bg-primary-subtle text-primary"
+                            style="width:34px;height:34px;flex:0 0 34px;font-size:.9rem">
+                        <i class="bi bi-diagram-3"></i>
+                      </span>
+                      <span class="celda-principal">{{ c.NombreCarrera }}</span>
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    <a class="badge text-bg-secondary text-decoration-none"
+                       href="{{ url_for('listar_estudiantes') }}">{{ c.Estudiantes }}</a>
+                  </td>
+                  <td class="text-center celda-secundaria">#{{ c.IdCarrera }}</td>
+                </tr>
+              {% else %}
+                <tr><td colspan="3" class="vacio">
+                  <i class="bi bi-diagram-3"></i>No hay carreras registradas.
+                </td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-body">
+        <h2 class="titulo-seccion mb-1">Nueva carrera</h2>
+        <p class="subtitulo mb-3">Se guarda en la tabla CARRERA.</p>
+
+        <form method="post">
+          <div class="mb-3">
+            <label class="form-label" for="NombreCarrera">Nombre de la carrera *</label>
+            <input class="form-control" id="NombreCarrera" name="NombreCarrera"
+                   maxlength="100" required placeholder="Ingeniería de Software">
+          </div>
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-plus-lg me-1"></i> Crear carrera
+          </button>
+        </form>
+
+        <div class="alert alert-light border mt-4 mb-0 small">
+          <i class="bi bi-link-45deg me-1"></i>
+          Una carrera no se puede borrar mientras tenga estudiantes o materias
+          asociadas: la llave foránea usa <code>ON DELETE RESTRICT</code>.
+        </div>
+      </div>
+    </div>
+
+    <div class="card mt-3">
+      <div class="card-body">
+        <h2 class="titulo-seccion mb-1">Integridad referencial</h2>
+        <p class="celda-secundaria mb-0">
+          <strong>CARRERA</strong> es el punto de partida de la jerarquía:
+          <br>
+          CARRERA → ESTUDIANTE / MATERIA → CURSO → DETALLE_MATRICULA
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

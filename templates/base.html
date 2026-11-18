@@ -1,0 +1,154 @@
+<!doctype html>
+{# =========================================================================
+   base.html
+   Plantilla base: todas las páginas la extienden.
+   - Si hay sesión se muestra el menú lateral y la barra superior.
+   - Si no hay sesión (login / registro) se muestra el diseño centrado.
+   - El tema claro/oscuro proviene de las preferencias guardadas en MongoDB.
+   ========================================================================= #}
+<html lang="es" data-bs-theme="{{ 'dark' if prefs.tema == 'oscuro' else 'light' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Panel{% endblock %} · Gestión Académica</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/font/bootstrap-icons.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+
+{% if session.username %}
+<div class="app-shell">
+  <!-- ======================= Menú lateral ======================= -->
+  <aside class="sidebar" id="sidebar">
+    <a class="marca" href="{{ url_for('dashboard') }}">
+      <span class="marca-icono"><i class="bi bi-mortarboard-fill"></i></span>
+      <span class="marca-texto">
+        <strong>Gestión Académica</strong>
+        <small>Teoría de BD</small>
+      </span>
+    </a>
+
+    <div class="seccion">Principal</div>
+    <nav class="nav flex-column">
+      <a class="nav-link {{ 'active' if request.endpoint == 'dashboard' }}"
+         href="{{ url_for('dashboard') }}">
+        <i class="bi bi-grid-1x2-fill"></i> Panel
+      </a>
+    </nav>
+
+    <div class="seccion">Gestión académica</div>
+    <nav class="nav flex-column">
+      <a class="nav-link {{ 'active' if request.endpoint in ('listar_estudiantes', 'crear_estudiante', 'editar_estudiante') }}"
+         href="{{ url_for('listar_estudiantes') }}">
+        <i class="bi bi-people-fill"></i> Estudiantes
+      </a>
+      <a class="nav-link {{ 'active' if request.endpoint in ('matriculas', 'crear_matricula', 'actualizar_nota', 'eliminar_matricula') }}"
+         href="{{ url_for('matriculas') }}">
+        <i class="bi bi-journal-check"></i> Matrículas
+      </a>
+      <a class="nav-link {{ 'active' if request.endpoint == 'cursos' }}"
+         href="{{ url_for('cursos') }}">
+        <i class="bi bi-easel2-fill"></i> Cursos
+      </a>
+      <a class="nav-link {{ 'active' if request.endpoint == 'carreras' }}"
+         href="{{ url_for('carreras') }}">
+        <i class="bi bi-diagram-3-fill"></i> Carreras
+      </a>
+    </nav>
+
+    <div class="seccion">Datos NoSQL</div>
+    <nav class="nav flex-column">
+      <a class="nav-link {{ 'active' if request.endpoint == 'ver_logs' }}"
+         href="{{ url_for('ver_logs') }}">
+        <i class="bi bi-activity"></i> Registro de actividad
+      </a>
+      <a class="nav-link {{ 'active' if request.endpoint == 'preferencias' }}"
+         href="{{ url_for('preferencias') }}">
+        <i class="bi bi-sliders2"></i> Preferencias
+      </a>
+    </nav>
+
+    <div class="sidebar-pie">
+      <div class="usuario">
+        <span class="avatar">{{ session.nombre[0]|upper }}</span>
+        <span class="text-truncate">
+          {{ session.nombre }}<br>
+          <span class="text-white-50" style="font-size:.72rem">@{{ session.username }}</span>
+        </span>
+      </div>
+      <div class="d-flex align-items-center justify-content-between">
+        <span><i class="bi bi-database-check me-1"></i>MySQL + MongoDB</span>
+        <a class="link-light link-opacity-50 link-opacity-100-hover text-decoration-none"
+           href="{{ url_for('auth.logout') }}" title="Cerrar sesión">
+          <i class="bi bi-box-arrow-right"></i> Salir
+        </a>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+  <!-- ======================= Contenido ======================= -->
+  <div class="app-main">
+    <header class="topbar">
+      <button class="btn btn-sm btn-outline-secondary d-lg-none" id="sidebarToggle"
+              type="button" aria-label="Abrir menú">
+        <i class="bi bi-list"></i>
+      </button>
+      <div class="me-auto">
+        <p class="titulo">{% block seccion %}Panel de control{% endblock %}</p>
+        <span class="fecha">{{ hoy|fecha }}</span>
+      </div>
+      <a class="btn btn-sm btn-outline-secondary d-none d-sm-inline-flex"
+         href="{{ url_for('ver_logs') }}" title="Ver registro de actividad">
+        <i class="bi bi-activity me-1"></i> Actividad
+      </a>
+      <div class="dropdown">
+        <button class="btn btn-sm btn-light border dropdown-toggle d-flex align-items-center gap-2"
+                data-bs-toggle="dropdown" type="button" aria-expanded="false">
+          <span class="avatar" style="width:28px;height:28px;flex:0 0 28px;font-size:.68rem">
+            {{ session.nombre[0]|upper }}
+          </span>
+          <span class="d-none d-md-inline">{{ session.username }}</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+          <li><a class="dropdown-item" href="{{ url_for('perfil') }}">
+            <i class="bi bi-person-circle me-2"></i>Mi cuenta</a></li>
+          <li><a class="dropdown-item" href="{{ url_for('preferencias') }}">
+            <i class="bi bi-sliders2 me-2"></i>Preferencias</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+            <i class="bi bi-box-arrow-right me-2"></i>Cerrar sesión</a></li>
+        </ul>
+      </div>
+    </header>
+
+    <main class="contenido">
+      {% include "_mensajes.html" %}
+      {% block contenido %}{% endblock %}
+    </main>
+
+    <footer class="pie d-flex flex-wrap justify-content-between gap-2">
+      <span>Proyecto Integrador · Teoría de Bases de Datos</span>
+      <span>
+        MySQL: <strong>bd_universidad</strong> ·
+        MongoDB: <strong>gestion_academica</strong>
+      </span>
+    </footer>
+  </div>
+</div>
+{% else %}
+<main class="auth-shell">
+  <div class="w-100" style="max-width: 1020px">
+    {% include "_mensajes.html" %}
+    {% block contenido_publico %}{% endblock %}
+  </div>
+</main>
+{% endif %}
+
+<script src="{{ url_for('static', filename='vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

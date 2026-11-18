@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block titulo %}Preferencias{% endblock %}
+{% block seccion %}Preferencias{% endblock %}
+
+{% block contenido %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+  <div>
+    <h1 class="titulo-seccion">Preferencias</h1>
+    <p class="subtitulo">
+      Se guardan como un documento en
+      {% if backend_nosql == 'firebase' %}Firebase (Cloud Firestore){% else %}MongoDB Atlas{% endif %},
+      no en MySQL.
+    </p>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-body">
+        <h2 class="titulo-seccion mb-1">Configuración personal</h2>
+        <p class="subtitulo mb-4">Los cambios se aplican de inmediato.</p>
+
+        <form method="post">
+          <div class="mb-4">
+            <label class="form-label d-block">Tema de la interfaz</label>
+            <div class="btn-group w-100" role="group" aria-label="Tema">
+              <input type="radio" class="btn-check" name="tema" id="temaClaro"
+                     value="claro" {{ 'checked' if prefs.tema == 'claro' }}>
+              <label class="btn btn-outline-primary" for="temaClaro">
+                <i class="bi bi-sun me-1"></i> Claro
+              </label>
+
+              <input type="radio" class="btn-check" name="tema" id="temaOscuro"
+                     value="oscuro" {{ 'checked' if prefs.tema == 'oscuro' }}>
+              <label class="btn btn-outline-primary" for="temaOscuro">
+                <i class="bi bi-moon-stars me-1"></i> Oscuro
+              </label>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label d-block">Idioma</label>
+            <div class="btn-group w-100" role="group" aria-label="Idioma">
+              <input type="radio" class="btn-check" name="idioma" id="idiomaEs"
+                     value="es" {{ 'checked' if prefs.idioma == 'es' }}>
+              <label class="btn btn-outline-primary" for="idiomaEs">Español</label>
+
+              <input type="radio" class="btn-check" name="idioma" id="idiomaEn"
+                     value="en" {{ 'checked' if prefs.idioma == 'en' }}>
+              <label class="btn btn-outline-primary" for="idiomaEn">Inglés</label>
+            </div>
+            <div class="form-text">El idioma queda guardado para futuras versiones de la interfaz.</div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label" for="registros_por_pagina">
+              Registros por página (5 a 100)
+            </label>
+            <input class="form-control" id="registros_por_pagina"
+                   name="registros_por_pagina" type="number" min="5" max="100"
+                   required value="{{ prefs.registros_por_pagina }}">
+            <div class="form-text">
+              Se usa para paginar el listado de estudiantes y de matrículas.
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check2 me-1"></i> Guardar preferencias
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h2 class="titulo-seccion">Documento en la base NoSQL</h2>
+          <span class="badge text-bg-success">guardado</span>
+        </div>
+        <p class="subtitulo">
+          Colección <code>preferencias</code> · base
+          <code>gestion_academica</code> · usuario
+          <code>{{ session.username }}</code>
+        </p>
+        <pre class="json-doc mb-0">{{ documento|tojson(indent=2) }}</pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h2 class="titulo-seccion mb-2">¿Por qué en MongoDB?</h2>
+        <ul class="celda-secundaria mb-0 ps-3">
+          <li>Las preferencias no tienen un esquema rígido: cada usuario puede
+            tener campos distintos.</li>
+          <li>Se leen y escriben como un solo documento (más simple que varias
+            filas en tablas relacionadas).</li>
+          <li>La operación <code>update_one(..., upsert=True)</code> inserta el
+            documento si no existe y lo actualiza si ya existe.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

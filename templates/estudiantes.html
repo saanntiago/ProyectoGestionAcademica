@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block titulo %}Estudiantes{% endblock %}
+{% block seccion %}Estudiantes{% endblock %}
+
+{% block contenido %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+  <div>
+    <h1 class="titulo-seccion">Estudiantes</h1>
+    <p class="subtitulo">
+      {{ paginacion.total }} estudiante{{ '' if paginacion.total == 1 else 's' }} en la base de datos.
+    </p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('crear_estudiante') }}">
+    <i class="bi bi-person-plus me-1"></i> Nuevo estudiante
+  </a>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    {# Búsqueda parametrizada: el texto viaja como valor, nunca dentro del SQL. #}
+    <form class="d-flex flex-wrap gap-2 mb-3" method="get" role="search">
+      <div class="input-group buscador">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input class="form-control" name="q" value="{{ busqueda }}" maxlength="100"
+               placeholder="Buscar por nombre, correo o ID" aria-label="Buscar">
+      </div>
+      <button type="submit" class="btn btn-outline-secondary">Buscar</button>
+      {% if busqueda %}
+        <a class="btn btn-link text-decoration-none" href="{{ url_for('listar_estudiantes') }}">
+          Limpiar
+        </a>
+      {% endif %}
+    </form>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th>Estudiante</th>
+            <th>Carrera</th>
+            <th class="text-center">Edad</th>
+            <th>Contacto</th>
+            <th class="text-center">Matrículas</th>
+            <th class="text-end">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in estudiantes %}
+            <tr>
+              <td>
+                <div class="nombre-celda">
+                  <span class="avatar">{{ e.PrimerNombre[0] }}{{ e.PrimerApellido[0] }}</span>
+                  <div>
+                    <div class="celda-principal">
+                      {{ e.PrimerNombre }} {{ e.SegundoNombre or '' }}
+                      {{ e.PrimerApellido }} {{ e.SegundoApellido or '' }}
+                    </div>
+                    <div class="celda-secundaria">ID #{{ e.IdEstudiante }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="badge badge-suave">{{ e.NombreCarrera }}</span>
+              </td>
+              <td class="text-center">{{ e.Edad }} años</td>
+              <td>
+                <div class="celda-principal" style="font-size:.82rem">{{ e.CorreoElectronico }}</div>
+                <div class="celda-secundaria">{{ e.NumeroTel or 'Sin teléfono' }}</div>
+              </td>
+              <td class="text-center">
+                {% if e.Matriculas %}
+                  <a class="badge text-bg-secondary text-decoration-none"
+                     href="{{ url_for('matriculas', q=e.CorreoElectronico) }}"
+                     title="Ver matrículas del estudiante">{{ e.Matriculas }}</a>
+                {% else %}
+                  <span class="badge text-bg-light text-body-secondary border">0</span>
+                {% endif %}
+              </td>
+              <td class="text-end text-nowrap">
+                <a class="btn btn-sm btn-outline-primary"
+                   href="{{ url_for('editar_estudiante', estudiante_id=e.IdEstudiante) }}"
+                   title="Editar">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <form class="d-inline" method="post"
+                      action="{{ url_for('eliminar_estudiante', estudiante_id=e.IdEstudiante) }}"
+                      onsubmit="return confirm('¿Eliminar a {{ e.PrimerNombre }} {{ e.PrimerApellido }}? Si tiene matrículas, el sistema no permitirá el borrado.');">
+                  <button class="btn btn-sm btn-outline-danger" title="Eliminar">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="6" class="vacio">
+                <i class="bi bi-people"></i>
+                {% if busqueda %}
+                  No se encontraron estudiantes que coincidan con «{{ busqueda }}».
+                {% else %}
+                  Aún no hay estudiantes registrados.
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% include "_paginacion.html" %}
+  </div>
+</div>
+
+<p class="celda-secundaria mt-3 mb-0">
+  <i class="bi bi-shield-check me-1"></i>
+  La búsqueda usa <code>LIKE %s</code> con parámetros: el texto se trata como
+  dato y los comodines <code>%</code> / <code>_</code> se escapan.
+</p>
+{% endblock %}
